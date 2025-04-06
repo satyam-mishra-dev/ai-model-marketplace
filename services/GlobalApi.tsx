@@ -4,25 +4,45 @@ import axios from "axios";
 
 export const GetAuthUserData = async(token: string) => {
    try {
+    if (!token) {
+        throw new Error('No token provided');
+    }
+
+    console.log('Attempting to fetch user data with token:', token.substring(0, 10) + '...');
+
     const userInfo = await axios.get(
         'https://www.googleapis.com/oauth2/v3/userinfo',
         { 
             headers: { 
                 'Authorization': `Bearer ${token}`,
                 'Accept': 'application/json'
-            },
-            validateStatus: (status) => status < 500 // Only reject if server error
+            }
         }
     );
 
-    if (userInfo.status === 401) {
-        console.error('Authorization failed - invalid token');
-        return null;
-    }
+    console.log('Google API Response:', {
+        status: userInfo.status,
+        headers: userInfo.headers,
+        data: userInfo.data
+    });
 
     return userInfo.data;
-   } catch (error) {
-       console.error("Error fetching user data:", error);
-       return null;
+   } catch (error: any) {
+       if (axios.isAxiosError(error)) {
+           const errorDetails = {
+               status: error.response?.status,
+               statusText: error.response?.statusText,
+               message: error.response?.data?.error?.message || error.message,
+               config: {
+                   url: error.config?.url,
+                   method: error.config?.method,
+                   headers: error.config?.headers
+               }
+           };
+           console.error("Google API Error Details:", errorDetails);
+       } else {
+           console.error("Non-Axios error:", error);
+       }
+       throw error; // Re-throw to handle in the component
    }
 }

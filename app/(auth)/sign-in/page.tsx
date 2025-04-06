@@ -17,12 +17,19 @@ function Page() {
     const { setUser } = useContext(AuthContext);
     
     const googleLogin = useGoogleLogin({
+        flow: 'implicit',
+        scope: 'openid email profile',
         onSuccess: async (tokenResponse) => {
             try {
-                // Save token
-                if (typeof window !== 'undefined') {
-                    localStorage.setItem('access_token', tokenResponse.access_token);
+                console.log("Token Response:", tokenResponse);
+                
+                if (!tokenResponse.access_token) {
+                    console.error("No access token received");
+                    return;
                 }
+
+                // Save token
+                localStorage.setItem('access_token', tokenResponse.access_token);
 
                 // Get user data from Google
                 const userData = await GetAuthUserData(tokenResponse.access_token);

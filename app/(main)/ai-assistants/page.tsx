@@ -1,12 +1,16 @@
 "use client"
 
-import React from 'react'
+import React, { useContext } from 'react'
 import Image from 'next/image'
 import AiAssistantsList from '@/services/AiAssistantsList'
 import { Checkbox } from '@/components/ui/checkbox'
 import { useState } from 'react'
 import {BlurFade} from '@/components/magicui/blur-fade'
 import { Button } from '@/components/continue'
+import { useMutation } from 'convex/react'
+import { api } from '@/convex/_generated/api'
+import { AuthContext } from '@/context/AuthContext'
+import { useRouter } from 'next/navigation'
 
 export type AiAssistant = {
   id: number;
@@ -20,17 +24,39 @@ export type AiAssistant = {
 
 function page() {
   const [selectedAssistants, setSelectedAssistants] = useState<AiAssistant[]>([]);
-
+  const inserAssistants = useMutation(api.userAiAssistants.InsertSelectedAssistants);
+  const router = useRouter();
+  
   const isAssistantSelected = (assistant: AiAssistant): boolean => {
     return selectedAssistants.some(item => item.id === assistant.id);
   };
 
+  const {user}= useContext(AuthContext);
+  
   const onSelect = (assistant: AiAssistant) => {
     const isSelected = isAssistantSelected(assistant);
     if (isSelected) {
       setSelectedAssistants(selectedAssistants.filter(item => item.id !== assistant.id));
     } else {
       setSelectedAssistants([...selectedAssistants, assistant]);
+    }
+  };
+
+  const onContinue = async () => {
+    try {
+      if (selectedAssistants.length > 0 && user?.id) {
+        // Take the first selected assistant and send it with the user ID
+        const assistantToInsert = {
+          ...selectedAssistants[0],
+          uid: user.id
+        };
+        const result = await inserAssistants({
+          records: assistantToInsert
+        });
+        router.push('/chat'); // Redirect to chat after successful insertion
+      }
+    } catch (error) {
+      console.error('Error inserting assistant:', error);
     }
   };
 
@@ -49,7 +75,7 @@ function page() {
                 </p>
                 </BlurFade>
             </div>
-            <Button disabled={selectedAssistants.length === 0} />
+            <Button disabled={selectedAssistants.length === 0} onClick={onContinue}/>
             </div>
         </div>
         <div className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 px-10 mt-10 md:px-28 lg:px-36 xl:px-48'>

@@ -5,9 +5,10 @@ import styled from 'styled-components';
 
 interface ButtonProps {
   disabled?: boolean;
+  onClick?: () => void;
 }
 
-export const Button: React.FC<ButtonProps> = ({ disabled }) => {
+export const Button: React.FC<ButtonProps> = ({ disabled, onClick }) => {
   return (
     <StyledWrapper>
       <div className="container">
@@ -15,8 +16,9 @@ export const Button: React.FC<ButtonProps> = ({ disabled }) => {
           href="#" 
           className={`button type--C ${disabled ? 'disabled' : ''}`}
           onClick={(e) => {
-            if (disabled) {
-              e.preventDefault();
+            e.preventDefault();
+            if (!disabled && onClick) {
+              onClick();
             }
           }}
         >

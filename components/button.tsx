@@ -1,22 +1,25 @@
 "use client";
 
-import React from 'react';
+import React, { ButtonHTMLAttributes } from 'react';
 import styled from 'styled-components';
 
-interface ButtonProps {
+interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   sub: string;
-  onClick?: () => void; // Add onClick prop
+  onClick?: () => void;
+  disabled?: boolean;
 }
 
-const Button: React.FC<ButtonProps> = ({ sub, onClick }) => {
+const Button: React.FC<ButtonProps> = ({ sub, onClick, disabled, ...props }) => {
   return (
     <StyledWrapper>
-      <div
+      <button
         aria-label="User Login Button"
-        tabIndex={0}
+        tabIndex={disabled ? -1 : 0}
         role="button"
-        className="user-profile"
-        onClick={onClick} // Pass the onClick prop here
+        className={`user-profile ${disabled ? 'disabled' : ''}`}
+        onClick={!disabled ? onClick : undefined}
+        disabled={disabled}
+        {...props}
       >
         <div className="user-profile-inner">
           <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
@@ -26,7 +29,7 @@ const Button: React.FC<ButtonProps> = ({ sub, onClick }) => {
           </svg>
           <p>{sub}</p>
         </div>
-      </div>
+      </button>
     </StyledWrapper>
   );
 };
@@ -54,6 +57,18 @@ const StyledWrapper = styled.div`
     background-color: rgba(46, 142, 255, 0.7);
     box-shadow: 0 0 10px rgba(46, 142, 255, 0.5);
     outline: none;
+  }
+
+  .user-profile.disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+    background: rgba(46, 142, 255, 0.1);
+  }
+
+  .user-profile.disabled:hover,
+  .user-profile.disabled:focus {
+    background: rgba(46, 142, 255, 0.1);
+    box-shadow: none;
   }
 
   .user-profile-inner {

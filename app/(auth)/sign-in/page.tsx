@@ -7,33 +7,51 @@ import { useGoogleLogin } from '@react-oauth/google';
 import { GetAuthUserData } from '@/services/GlobalApi';
 import { useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
+import { useRouter } from 'next/navigation';
+import { useContext } from 'react';
+import { AuthContext } from '@/context/AuthContext';
 
-function page() {
+function Page() {
+    const router = useRouter();
     const CreateUser = useMutation(api.users.CreateUser);
+    const { setUser } = useContext(AuthContext);
     
     const googleLogin = useGoogleLogin({
         onSuccess: async (tokenResponse) => {
-            console.log(tokenResponse);
-            if(typeof window !== 'undefined') {
-                localStorage.setItem('access_token', tokenResponse.access_token!);
-            }
-            const userData = await GetAuthUserData(tokenResponse.access_token!);
-            console.log(userData);
-            
-            // Create user in database
             try {
-                const newUser = await CreateUser({
+                // Save token
+                if (typeof window !== 'undefined') {
+                    localStorage.setItem('access_token', tokenResponse.access_token);
+                }
+
+                // Get user data from Google
+                const userData = await GetAuthUserData(tokenResponse.access_token);
+                console.log("Google user data:", userData);
+
+                if (!userData) {
+                    console.error("Failed to get user data from Google");
+                    return;
+                }
+
+                // Create or get user in database
+                const dbUser = await CreateUser({
                     name: userData.name,
                     email: userData.email,
                     picture: userData.picture
                 });
-                console.log("User created:", newUser);
+
+                // Update context
+                setUser(dbUser);
+                
+                // Redirect to main page
+                router.push('/ai-assistants');
             } catch (error) {
-                console.error("Error creating user:", error);
+                console.error("Error in sign-in process:", error);
             }
-            
         },
-        onError: (errorResponse) => console.log(errorResponse),
+        onError: (errorResponse) => {
+            console.error("Google login error:", errorResponse);
+        },
     });
 
     return (
@@ -41,10 +59,10 @@ function page() {
             <div className="gap-10 rounded-2xl p-10 shadow-md bg-gray-50 dark:bg-gray-800 flex flex-col items-center justify-center">
                 <Image src="/logo.svg" alt="logo" width={50} height={50} />
                 <h2 className="text-2xl">Start your AI journey by Signing In</h2>
-                <Button sub="Sign-in" onClick={() => googleLogin()}></Button>
+                <Button sub="Sign-in" onClick={() => googleLogin()} />
             </div>
         </div>
     );
 }
 
-export default page;
+export default Page;

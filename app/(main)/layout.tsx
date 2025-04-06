@@ -1,5 +1,7 @@
+"use client";
+
 import React from 'react'
-import Header from './components/Header';
+import Provider from './provider'
 
 function Workspacelayout({
     children,
@@ -7,10 +9,9 @@ function Workspacelayout({
     children: React.ReactNode;
   }>) {
   return (
-    <div>
-        <Header/>
-        {children}
-    </div>
+    <Provider>
+      {children}
+    </Provider>
   )
 }
 

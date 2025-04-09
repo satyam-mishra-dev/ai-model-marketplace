@@ -11,6 +11,7 @@ import { useMutation } from 'convex/react'
 import { api } from '@/convex/_generated/api'
 import { AuthContext } from '@/context/AuthContext'
 import { useRouter } from 'next/navigation'
+import { Id } from '@/convex/_generated/dataModel'
 
 export type AiAssistant = {
   id: number;
@@ -22,11 +23,11 @@ export type AiAssistant = {
   sampleQuestions: string[];
 };
 
-function page() {
+function Page() {
   const [selectedAssistants, setSelectedAssistants] = useState<AiAssistant[]>([]);
   const inserAssistants = useMutation(api.userAiAssistants.InsertSelectedAssistants);
   const router = useRouter();
-  
+  const [loading, setLoading] = useState(false);
   const isAssistantSelected = (assistant: AiAssistant): boolean => {
     return selectedAssistants.some(item => item.id === assistant.id);
   };
@@ -40,23 +41,44 @@ function page() {
     } else {
       setSelectedAssistants([...selectedAssistants, assistant]);
     }
+    console.log('Selected Assistants after update:', selectedAssistants);
   };
 
   const onContinue = async () => {
     try {
-      if (selectedAssistants.length > 0 && user?.id) {
-        // Take the first selected assistant and send it with the user ID
-        const assistantToInsert = {
-          ...selectedAssistants[0],
-          uid: user.id
-        };
-        const result = await inserAssistants({
-          records: assistantToInsert
+      setLoading(true);
+      if (!user || !user.sub) {
+        console.error('User data incomplete - missing sub field');
+        throw new Error('User authentication data is incomplete');
+      }
+      console.log('User in onContinue:', user);
+      console.log('Selected Assistants in onContinue:', selectedAssistants);
+      console.log('Validating selected assistants...');
+      selectedAssistants.forEach((assistant, index) => {
+        if (!assistant.id || !assistant.name) {
+          console.error(`Assistant at index ${index} is missing required properties:`, assistant);
+        }
+      });
+      if (selectedAssistants.length > 0 && user.sub) {
+        const assistantsWithUid = selectedAssistants
+          .filter(assistant => assistant.id && assistant.name)
+          .map(assistant => ({
+            ...assistant,
+            uid: user.sub
+          }));
+        console.log('Sending assistants to mutation:', assistantsWithUid);
+        await inserAssistants({
+          records: assistantsWithUid
         });
-        router.push('/chat'); // Redirect to chat after successful insertion
+        console.log('Assistants successfully inserted. Redirecting to chat.');
+        router.push('/chat');
+      } else {
+        console.warn('No assistants selected or user ID is missing.');
       }
     } catch (error) {
       console.error('Error inserting assistant:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -99,4 +121,4 @@ function page() {
   )
 }
 
-export default page
+export default Page

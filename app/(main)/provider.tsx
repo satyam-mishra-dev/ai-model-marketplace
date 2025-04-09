@@ -19,7 +19,7 @@ function Provider({
 
     const checkUserAuth = async () => {
         try {
-            const token = localStorage.getItem("access_token");
+            const token = localStorage.getItem("user_token");
             if (!token) {
                 router.replace('/sign-in');
                 return;

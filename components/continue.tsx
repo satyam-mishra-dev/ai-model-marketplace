@@ -2,29 +2,37 @@
 
 import React from 'react';
 import styled from 'styled-components';
+import { Loader2 } from 'lucide-react';
 
 interface ButtonProps {
   disabled?: boolean;
   onClick?: () => void;
+  loading?: boolean;
 }
 
-export const Button: React.FC<ButtonProps> = ({ disabled, onClick }) => {
+export const Button: React.FC<ButtonProps> = ({ disabled, onClick, loading = false }) => {
   return (
     <StyledWrapper>
       <div className="container">
         <a 
           href="#" 
-          className={`button type--C ${disabled ? 'disabled' : ''}`}
+          className={`button type--C ${disabled || loading ? 'disabled' : ''}`}
           onClick={(e) => {
             e.preventDefault();
-            if (!disabled && onClick) {
+            if (!disabled && !loading && onClick) {
               onClick();
             }
           }}
         >
           <div className="button__line" />
           <div className="button__line" />
-          <span className="button__text">Continue ?</span>
+          <span className="button__text">
+            {loading ? (
+              <Loader2 className="h-5 w-5 animate-spin" />
+            ) : (
+              'Continue ?'
+            )}
+          </span>
           <div className="button__drow1" />
           <div className="button__drow2" />
         </a>

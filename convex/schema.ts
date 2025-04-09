@@ -9,7 +9,8 @@ export default defineSchema({
     name: v.string(),
     email: v.string(),
     picture: v.string(),
-    credits: v.number(),
+    credits: v.float64(),
+    sub: v.string(), // Google Auth sub ID
   }),
   userAiAssistants: defineTable({
     id: v.number(),

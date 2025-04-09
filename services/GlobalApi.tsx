@@ -29,6 +29,12 @@ export const GetAuthUserData = async(token: string) => {
     return userInfo.data;
    } catch (error: any) {
        if (axios.isAxiosError(error)) {
+           if (error.response?.status === 401) {
+               console.error("Token is invalid or expired. Redirecting to sign-in...");
+               localStorage.removeItem("user_token"); // Clear the invalid token
+               window.location.href = "/auth/sign-in";
+               return;
+           }
            const errorDetails = {
                status: error.response?.status,
                statusText: error.response?.statusText,
@@ -39,7 +45,16 @@ export const GetAuthUserData = async(token: string) => {
                    headers: error.config?.headers
                }
            };
-           console.error("Google API Error Details:", errorDetails);
+           console.error("Full error object:", error);
+           if (error.response?.status === 401) {
+               console.error("Unauthorized: The token may be invalid or expired.");
+               console.error("Token used:", token);
+           }
+           if (errorDetails && Object.keys(errorDetails).length > 0) {
+               console.error("Google API Error Details:", errorDetails);
+           } else {
+               console.error("Google API Error Details are missing or empty.");
+           }
        } else {
            console.error("Non-Axios error:", error);
        }

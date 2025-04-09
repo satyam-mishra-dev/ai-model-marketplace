@@ -28,8 +28,11 @@ function Page() {
                     return;
                 }
 
-                // Save token
-                localStorage.setItem('access_token', tokenResponse.access_token);
+                // Log token saving
+                console.log('Saving token to localStorage:', tokenResponse.access_token);
+
+                // Save token with the correct key
+                localStorage.setItem('user_token', tokenResponse.access_token);
 
                 // Get user data from Google
                 const userData = await GetAuthUserData(tokenResponse.access_token);
@@ -44,7 +47,8 @@ function Page() {
                 const dbUser = await CreateUser({
                     name: userData.name,
                     email: userData.email,
-                    picture: userData.picture
+                    picture: userData.picture,
+                    sub: userData.sub
                 });
 
                 // Update context
